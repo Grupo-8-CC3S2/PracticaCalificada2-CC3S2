@@ -17,4 +17,4 @@ curl -D - -o /dev/null http://example.com/login | grep -i "Content-Type"
 ```
 Makefile va a orquestar el pipeline mediante los targets,
 para ello declaramos las variables Make usuales con algunas novedades interesantes como ``.SHELLFLAGS`` con el cual configuramos un modo estricto al mismo estilo que en bash, con ``MAKEFLAGS`` definimos una configuracion global para sobrellevar el uso de variables no declaradas y el uso de reglas implicitas, y en cuanto a``.DELETE_ON_ERROR`` elimina artefactos corruptos<br>
-Se introducen ademas los tan utiles linteres, con los cuales analizaremos codigo sin ejecutar, ``shellcheck`` y ``shfmt`` para errores de sintaxis e identacion respectivamente.
+Se introducen ademas los tan utiles linteres, con los cuales analizaremos codigo sin ejecutar, ``shellcheck`` y ``shfmt`` para errores de sintaxis e identacion
