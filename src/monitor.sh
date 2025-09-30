@@ -5,7 +5,7 @@ set -o pipefail
 umask 027
 set -o noclobber
 
-ENDPOINT="${ENDPOINT:-http://example.com/login}"
+ENDPOINT="${ENDPOINT:-http://facebook.com/login}"
 cliente_curl(){
     resultado=$(curl --write-out "%{http_code} %{time_total}" "$ENDPOINT" -o /dev/null)
     http_code=$(echo "$resultado" | awk '{print $1}')
