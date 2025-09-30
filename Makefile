@@ -3,7 +3,7 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 .DELETE_ON_ERROR:
 
-.PHONY: tools build test run pack clean help deps
+.PHONY: tools build test run package clean help deps
 
 SHELLCHECK :=shellcheck
 SHFMT :=shfmt
@@ -13,16 +13,15 @@ OUT_DIR :=out
 DIST_DIR :=dist
 all: tools lint build test package
 
-build: $(OUT_DIR)/monitor.log
-
+build: $(OUT_DIR)/monitor.log ## build dummy (evidencia)
 $(OUT_DIR)/monitor.log: $(SRC_DIR)/monitor.sh
 	mkdir -p $(@D)
 	$(SHELL) $< > $@
 
-test: $(TEST_DIR)/test_monitor.sh
-	bash $<
+test: ## ejecuta pruebas bats
+	bats $(TEST_DIR)
 
-package: $(DIST_DIR)/monitor.tar.gz
+package: $(DIST_DIR)/monitor.tar.gz ## Empaqueta artefactos determinísticamente
 
 $(DIST_DIR)/monitor.tar.gz: $(OUT_DIR)/monitor.log
 	mkdir -p $(@D)
@@ -43,5 +42,9 @@ tools: deps##este target verifica dependencias
 
 clean: ## target de limpieza
 	@rm -rf $(OUT_DIR) $(DIST_DIR)
+
 help: ## visualizacion de descripcion de targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':|##' '{printf " %s %s\n" ,$$1,$$3}'
+
+run: ## ejecuta monitor y genera CSV
+	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/monitor.sh
