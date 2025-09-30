@@ -1,0 +1,6 @@
+timestamp,target,http_codigo,tiempo_ms
+2025-09-28T22:42:43Z,https://github.com,200,897
+2025-09-28T22:42:43Z,http://localhost:3001,200,2
+2025-09-28T22:44:35Z,https://endpoint-no-existe.com,0,0
+2025-09-28T22:44:35Z,http://localhost:3002,0,0
+2025-09-28T22:44:35Z,http://github.com,301,356
