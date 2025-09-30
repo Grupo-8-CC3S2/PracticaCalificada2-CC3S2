@@ -1,5 +1,42 @@
+# Contrato de salida: `out/latencias.csv`
 
-## Script `check-endpoint.sh` para monitoreo de endpoints
+## Estudiante: Sanchez Vega Andre Alvaro
+
+### Definición formal (contrato)
+- Cabecera: `ts,target,http_code,time_ms`
+- Campos:
+  - ts → ISO 8601 UTC
+  - target → URL
+  - http_code → número de 3 dígitos
+  - time_ms → entero ≥ 0
+- Delimitador: `,`
+- Encoding: UTF-8
+- Reglas de evolución: cabecera fija, columnas extra solo en S2/S3.
+
+### Validar que existe al menos una fila de datos (además de cabecera)
+
+```bash
+[ "$(wc -l < out/latencias.csv)" -ge 2 ] echo "OK: tiene filas"
+```
+
+### Validar formato de cada fila: ts,target,http_code,time_ms
+```bash
+tail -n +2 out/latencias.csv | grep -Eq '^[^,]+,[^,]+,[0-9]{3},[0-9]+$' && echo "OK: formato válido"
+```
+
+### Ejemplo de contenido esperado
+```
+ts,target,http_code,time_ms
+2025-09-30T15:12:45Z,https://example.com,200,234
+2025-09-30T15:12:45Z,https://facebook.com/login,302,421
+```
+```
+OK: tiene filas
+OK: formato válido
+```
+## Estudiante: Quispe Villena Renzo
+
+### Script `check-endpoint.sh` para monitoreo de endpoints
 
 Comandos usados:
 
@@ -27,7 +64,7 @@ Tenemos que:
 - `http://github.com` respondió 301 (redirección a HTTPS) en 356 ms. Exit code = 1 por los fallos de conexión.
 
 
-#### Ejemplo de salida para endpoints con errores: 
+### Ejemplo de salida para endpoints con errores: 
 
 ```
 jquispe@pc1-quispe:~/Escritorio/cursos/Actividades/PracticaCalificada2-CC3S2$ TARGETS="http://localhost:5001 https://endpoint-no-existe.com" ./src/check-endpoint.sh
