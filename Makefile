@@ -3,7 +3,7 @@ SHELL :=bash
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 .DELETE_ON_ERROR:                                                          
 
-.PHONY: tools build test run pack clean help
+.PHONY: tools build test run pack clean help deps
 
 SHELLCHECK := shellcheck
 SHFMT := shfmt
@@ -12,10 +12,26 @@ TEST_DIR := tests
 OUT_DIR := out 
 DIST_DIR := dist 
 
-tools: ##este target verifica dependencias
-	@command -v $(SHELLCHECK) >/dev/null || { echo "shellcheck no instalado ";exit 1;}
-	@commnad -v $(SHFMT) >/dev/null || { echo "shfmt no instalado"; exit 1 ; }
-	@command -v grep >/dev/null || {echo "falta grep ", exit 1; }
-	@command -v awk >/dev/null || { echo "awk ausente ", exit 1; }
-	@tar --version 2 >/dev/null | grep -q 'GNU tar' || { echo "Se debe instalar GNU tar"}
-	@command -v sha256sum >/dev/null || {echo "Falta sha256sum";exit 1;}
+all: tools lint build test package
+
+build: $(OUT_DIR)/monitor.log
+
+$(OUT_DIR)/monitor.log: $(SRC_DIR)/monitor.sh
+	mkdir -p $(@D)
+	$(SHELL) $< > $@
+
+test: $(TEST_DIR)/test_monitor.sh
+	$(SHELL) $<
+
+deps: ##este target instala dependencias
+	@command -v $(SHELLCHECK) >/dev/null || { echo "instalando  shellcheck"; sudo apt update && sudo apt install shellcheck -y; }
+	@command -v $(SHFMT) >/dev/null || { echo "instalando shfmt"; sudo apt update && sudo apt install shfmt -y; }
+	@tar --version 2 >/dev/null | grep -q 'GNU tar' || { echo "instalando tar"; sudo apt update && sudo apt install tar -y ; }
+
+tools: deps##este target verifica dependencias
+	@command -v $(SHELLCHECK) >/dev/null || { echo "shellcheck no instalado "; exit 1; }
+	@command -v $(SHFMT) >/dev/null || { echo "shfmt no instalado"; exit 1 ; }
+	@command -v grep >/dev/null || { echo "falta grep "; exit 1; }
+	@command -v awk >/dev/null || { echo "awk ausente "; exit 1; }
+	@tar --version 2>/dev/null | grep -q 'GNU tar' || { echo "Se debe instalar GNU tar"; exit 1; }
+	@command -v sha256sum >/dev/null || { echo "Falta sha256sum"; exit 1; }
