@@ -24,9 +24,9 @@ test: $(TEST_DIR)/test_monitor.sh
 
 package: $(DIST_DIR)/monitor.tar.gz
 
-$(DIST_DIR)/monitor.tar.gz: $(OUT_DIR)/monitor.sh
+$(DIST_DIR)/monitor.tar.gz: $(OUT_DIR)/monitor.log
 	mkdir -p $(@D)
-	tar --sort=name --owner=0 --group=0 --numeric-owner --mtime='UTC 1970-01-01' 
+	tar --sort=name --owner=0 --group=0 --numeric-owner --mtime='UTC 1970-01-01' -czf $@ -C $(OUT_DIR) monitor.log
 
 deps: ##este target instala dependencias
 	@command -v $(SHELLCHECK) >/dev/null || { echo "instalando  shellcheck"; sudo apt update && sudo apt install shellcheck -y; }
