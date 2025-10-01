@@ -101,3 +101,45 @@ http_codigo=$(echo "$salida" | awk '{print $1}')
 ```
 a http_code y tiempo_ms respectivamente.<br>
 Seguidamente se usa el ``[[ "$http_code" -ne 200]]`` que es el operador condicional evaluando si http_code es disntinto a 200, si lo es, significado que ha habiado un error.
+Se registra el resultado de sondeo en  ``latencias.csv``<br>
+
+Ahora conviene detallar el script ``lib_csv.sh`` aqui se declara la variable de entorno ``CSV_FILE`` y algunas funciones como ``ensure`` donde se crea la carpeta para latencias.csv  y si el existe el archivo en cuestion las cabeceras son guardas en nuestro csv.
+```bash
+csv_header() { 
+  echo "ts,target,http_code,time_ms"; 
+}
+
+ensure_csv() {
+  mkdir -p "$(dirname "$CSV_FILE")"
+  [[ -f "$CSV_FILE" ]] || csv_header > "$CSV_FILE"
+}
+```
+las otras funciones validan que las respuestas tengan el formato esperado para ``http_code`` y ``time_total``
+En el cuerpo del comando condicional usanmos ``=~`` para analizar la expresion regular y determinar por ejemplo que tengamos 3 digitos exactamente ``"${1:-}" =~ ^[0-9]{3}$``<br>
+```bash
+is_http_code() {
+  [[ "${1:-}" =~ ^[0-9]{3}$ ]]; 
+}
+is_uint() { 
+  [[ "${1:-}" =~ ^[0-9]+$   ]]; 
+}
+```
+Es en csv_append donde hacemos uso de las 2 funciones anteriores, aqui validamos los datos en cada linea , usamos variables locales``local ts="${1:-}" target="${2:-}" code="${3:-}" ms="${4:-}"``, se llama a ensure_csv que crear el archivo de no existir<br>
+Nos aseguramos que los campos de interes no esten vacios``[[ -n "$ts" && -n "$target" ]]`` validando a la vez el formato de las parametros analizados ``is_http_code "$code"`` y 
+`` is_uint "$ms" ``
+```bash
+
+csv_append() {
+  local ts="${1:-}" target="${2:-}" code="${3:-}" ms="${4:-}"
+  ensure_csv
+
+  [[ -n "$ts" && -n "$target" ]] || { echo "csv_append: ts/target vacíos" >&2; return 1; }
+  is_http_code "$code"           || { echo "csv_append: http_code inválido: $code" >&2; return 1; }
+  is_uint "$ms"                  || { echo "csv_append: time_ms inválido: $ms" >&2; return 1; }
+
+  printf '%s,%s,%s,%s\n' "$ts" "$target" "$code" "$ms" >> "$CSV_FILE"
+}
+```
+
+
+
