@@ -11,6 +11,7 @@ SRC_DIR :=src
 TEST_DIR :=tests
 OUT_DIR :=out
 DIST_DIR :=dist
+SCRIPT :=$(SRC_DIR)/check-endpoint.sh
 all: tools lint build test package
 
 build: $(OUT_DIR)/monitor.log ## build dummy (evidencia)
@@ -65,8 +66,6 @@ verify-contratos: ## Verifica cabeceras de artefactos
 	@echo "[verify] contratos OK"
 
 monitor:
-	@mkdir -p $(OUT_DIR)
-	@export TARGETS=$(TARGETS);\
 	while true;do\
 		bash $(SCRIPT);\
 		sleep 3;\
