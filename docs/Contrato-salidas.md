@@ -34,6 +34,81 @@ ts,target,http_code,time_ms
 OK: tiene filas
 OK: formato válido
 ```
+
+### Evolución en Sprint 2
+
+**Nota:** ahora `out/latencias.csv` tiene cabecera:
+`timestamp,target,p50,p75,p90,http_codigo`
+
+Campos:
+- timestamp → ISO 8601 UTC
+- target → URL
+- p50, p75, p90 → percentiles de latencia (ms)
+- http_codigo → código de estado HTTP (200,301,404,500,000)
+
+### Artefacto – `out/resumen_por_target.csv`
+**Cabecera obligatoria:**
+target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts
+
+
+**Columnas y significado:**
+- `target` → URL del endpoint medido.
+- `muestras` → cantidad de filas del target en `out/latencias.csv`.
+- `p50_avg_ms`, `p75_avg_ms`, `p90_avg_ms` → promedio de los percentiles p50/p75/p90.
+- `p90_max_ms` → valor máximo de p90 observado para el target.
+- `rate_2xx`, `rate_3xx`, `rate_4xx`, `rate_5xx`, `rate_000` → proporción de respuestas HTTP por familia de códigos.
+- `alertas_p90_excedidas` → número de veces que el p90 superó el umbral `$BUDGET_MS`.
+- `ult_ts` → último timestamp registrado para ese target.
+
+**Validaciones rápidas:**
+```bash
+# Verificar que el archivo existe y tiene al menos una fila
+[ "$(wc -l < out/resumen_por_target.csv)" -ge 2 ] && echo "OK: hay datos"
+
+# Verificar cabecera exacta
+head -1 out/resumen_por_target.csv | grep -qx 'target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts' && echo "OK: cabecera correcta"
+```
+### Ejemplo esperado
+
+```
+target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts
+https://github.com,2,696,1034,1652,2103,1.0000,0.0000,0.0000,0.0000,0.0000,1,2025-10-01T02:20:00Z
+```
+### Artefacto - out/alertas_resumen.csv
+
+**Cabecera obligatoria:**
+
+`timestamp,target,p90_ms,http_codigo,alerta_p90_excede`
+
+**Columnas y significado:**
+
+- `timestamp` → marca de tiempo ISO 8601 UTC (YYYY-MM-DDThh:mm:ssZ).
+
+- `target` → URL del endpoint medido.
+
+- `p90_ms` → valor del percentil 90 calculado para esa corrida.
+
+- `http_codigo` → código HTTP obtenido (200,301,404,500,000).
+
+- `alerta_p90_excede` → indicador (SI o NO) de si el p90 superó el umbral $BUDGET_MS
+
+**Validaciones rápidas:**
+
+```bash
+# Verificar cabecera exacta
+head -1 out/alertas_resumen.csv | grep -qx 'timestamp,target,p90_ms,http_codigo,alerta_p90_excede' && echo "OK: cabecera correcta"
+
+# Verificar si existen alertas activas (p90 > BUDGET_MS)
+grep ',SI$' out/alertas_resumen.csv || echo "Sin alertas por p90"
+```
+### Ejemplo esperado
+```
+timestamp,target,p90_ms,http_codigo,alerta_p90_excede
+2025-10-01T02:17:52Z,https://httpbin.org/status/404,927,404,SI
+2025-10-01T02:20:00Z,https://github.com,1200,200,SI
+OK: cabecera correcta
+OK: validación de alertas
+```
 ## Estudiante: Quispe Villena Renzo
 
 ### Script `check-endpoint.sh` para monitoreo de endpoints
