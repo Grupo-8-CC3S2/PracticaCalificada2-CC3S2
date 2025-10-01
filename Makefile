@@ -14,7 +14,7 @@ DIST_DIR :=dist
 all: tools lint build test package
 
 build: $(OUT_DIR)/monitor.log ## build dummy (evidencia)
-$(OUT_DIR)/monitor.log: $(SRC_DIR)/monitor.sh
+$(OUT_DIR)/monitor.log: $(SRC_DIR)/check-endpoint.sh
 	mkdir -p $(@D)
 	$(SHELL) $< > $@
 
@@ -47,7 +47,7 @@ help: ## visualizacion de descripcion de targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':|##' '{printf " %s %s\n" ,$$1,$$3}'
 
 run: ## ejecuta monitor y genera CSV
-	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/monitor.sh
+	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/check-endpoint.sh
 
 ## Calcula métricas agregadas (resumen) y alertas desde out/latencias.csv
 parse: $(OUT_DIR)/resumen_por_target.csv $(OUT_DIR)/alertas_resumen.csv
@@ -63,3 +63,11 @@ verify-contratos: ## Verifica cabeceras de artefactos
 	@head -1 out/resumen_por_target.csv | grep -qx 'target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts'
 	@head -1 out/alertas_resumen.csv | grep -qx 'timestamp,target,p90_ms,http_codigo,alerta_p90_excede'
 	@echo "[verify] contratos OK"
+
+monitor:
+	@mkdir -p $(OUT_DIR)
+	@export TARGETS=$(TARGETS);\
+	while true;do\
+		bash $(SCRIPT);\
+		sleep 3;\
+	done
