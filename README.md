@@ -141,5 +141,43 @@ csv_append() {
 }
 ```
 
+Ahora bien , se va a ampliar el suite de pruebas con bats para el reconomiento de positivos  y negativos <br>
+Recordemos rapidamente que el scripts bats implementa la metodologia AAA (Arrange Act Assert) 
+<br>
 
+Preparamos el entorno 
+```bash
+export TARGETS="https://example.com"
+```
+ seguidamente actuamos 
 
+```bash run bash -lc 'make run'
+  if [ "$status" -ne 0 ]; then
+    run bash -lc './src/check-endpoint.sh'
+  fi
+```
+Para verificar como ultima accion
+```bash
+[ "$status" -eq 0 ]
+```
+Entonces teniendo en cuenta eso se implementa ``test_http.bats``
+```bash
+@test "el endpoint con el http_code de interes"
+EXPORTAR TARGET ← endpoint 
+ejecutar check-endpoint > latencias.csv
+[ si codigo de estado es http_code de objetivo]
+grep imprimie la linea que tiene http_code
+```
+Se usa httpbin.org , este servicio de pruebas http nos permitira simular codigos de estado de forma amigable<br>
+Para http_code 200  con este endpoint ``/httpbin.org/status/200``<br>
+Del mismo modo para http_code 404  y 500
+```bash
+@test "endpoint valido http_code 200" {
+  export TARGETS="https://httpbin.org/status/200"
+  run bash -lc './src/check-endpoint.sh'
+  [ "$status" -eq 0 ]
+  grep 200 out/latencias.csv
+}
+```
+
+Ahora bien para el monitoreo continuo se declara otro target.

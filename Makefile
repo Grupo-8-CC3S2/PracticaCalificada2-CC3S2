@@ -3,7 +3,7 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 .DELETE_ON_ERROR:
 
-.PHONY: tools build test run package clean help deps
+.PHONY: tools build test run package clean help deps monitor
 
 export LC_ALL :=C
 export LANG :=C
@@ -16,6 +16,9 @@ TEST_DIR :=tests
 OUT_DIR :=out
 DIST_DIR :=dist
 TARGETS :=example.com
+
+SCRIPT=./src/check-endpoint.sh
+
 all: tools lint build test package run
 
 build: $(OUT_DIR)/monitor.log ## build dummy (evidencia)
@@ -59,3 +62,12 @@ help: ## visualizacion de descripcion de targets
 
 run: ## ejecuta monitor y genera CSV
 	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/check-endpoint.sh
+
+monitor:
+	@mkdir -p $(OUT_DIR)
+	@export TARGETS=$(TARGETS);\
+	while true;do\
+		bash $(SCRIPT);\
+		sleep 3;\
+	done
+
