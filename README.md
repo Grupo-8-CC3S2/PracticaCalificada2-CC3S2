@@ -65,6 +65,17 @@ A su vez es necesario detallar la hora del sondeo
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 `` configurado esto se tiene el escenario listo para el sondeo 
 ```bash
+for TARGETS:
+    salida ← consulta curl
+    if salida:
+        http_code ← $1 de salida
+        tiempo_ms ← $2 de salida
+        if error
+    else:
+        no asignar http tiempo_ms
+```
+Que es 
+```bash
 for objetivo in $TARGETS; do
   if salida=$(curl ${CURL_OPTS:-} -sS -o /dev/null -w "%{http_code} %{time_total}" "$objetivo"); then
     http_codigo=$(echo "$salida" | awk '{print $1}')
@@ -82,3 +93,11 @@ for objetivo in $TARGETS; do
 done
 ```
 Recorremos TARGETS ejecutando el sondeo para cada uno de los endpoint, se usa el ya conocido ``$()`` comando se sustitucion, el cliente curl es provisto de muchas opciones mediante flags, uno de los cuales es ``CURL_OPTS`` que permite usar ``--max-time`` tiempo maximo permitido para obtener el request.<br>
+La ``salida `` de la consulta es parseado via ``àwk`` usando el separador espacio por defecto asignando los campos ``$1`` y ``$2`` 
+```bash
+http_codigo=$(echo "$salida" | awk '{print $1}')
+    tiempo_ms=$(echo "$salida" | awk '{printf("%d", $2*1000)}')
+  
+```
+a http_code y tiempo_ms respectivamente.<br>
+Seguidamente se usa el ``[[ "$http_code" -ne 200]]`` que es el operador condicional evaluando si http_code es disntinto a 200, si lo es, significado que ha habiado un error.
