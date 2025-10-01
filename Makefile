@@ -5,6 +5,10 @@ MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 .PHONY: tools build test run package clean help deps
 
+export LC_ALL :=C
+export LANG :=C
+export TZ :=UTC
+
 SHELLCHECK :=shellcheck
 SHFMT :=shfmt
 SRC_DIR :=src
@@ -26,7 +30,7 @@ $(OUT_DIR)/latencias.csv: $(SRC_DIR)/check-endpoint.sh
 	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $<
 
 test: ## ejecuta pruebas bats
-	bats $(TEST_DIR)
+	bats $(TEST_DIR)/test_monitor.bats
 
 package: $(DIST_DIR)/monitor.tar.gz ## Empaqueta artefactos determinísticamente
 
