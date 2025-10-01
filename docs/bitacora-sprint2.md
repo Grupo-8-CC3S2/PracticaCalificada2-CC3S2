@@ -34,3 +34,102 @@ Explicación de cada fila del archivo `out/latencias.csv`:
 - `http://localhost:3001`: falló (0 — servicio no escuchando).
 
 En casos donde el host no exista (por ejemplo `https://endpoint-no-existe.com`) o el puerto no tenga un servicio escuchando (como `http://localhost:3001`), se obtiene código 000 y latencias en 0, lo que indica fallo de conexión.
+
+
+## Estudiante: Sanchez Vega Andre Alvaro
+
+### Objetivo de mi parte en Sprint 2
+Implementar un **parser robusto en Bash** (`src/parser_resumen.sh`) que procese el archivo de entrada `out/latencias.csv` generado por el Integrante A y produzca:
+1. `out/resumen_por_target.csv` → métricas agregadas por cada endpoint (p50/p75/p90 promedio, p90 máximo, tasas de códigos HTTP, alertas acumuladas, último timestamp).
+2. `out/alertas_resumen.csv` → registro de alertas fila a fila (si p90 excede `$BUDGET_MS`).
+
+Además:
+- Integrar el parser con el **Makefile** (`make parse`).
+- Validar **idempotencia** (no recalcular si no cambian entradas).
+- Escribir **pruebas Bats** que confirmen cabeceras, idempotencia y manejo de errores.
+
+### Entrada consumida
+Archivo `out/latencias.csv` generado por el script `check-endpoint.sh` (Integrante A).
+
+Cabecera esperada en Sprint 2:
+```
+timestamp,target,p50,p75,p90,http_codigo
+```
+
+### Artefactos generados por mi parser
+- **out/resumen_por_target.csv**
+  ```
+  target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts
+  https://github.com,1,892,1268,2103,2103,1.0000,0.0000,0.0000,0.0000,0.0000,1,2025-10-01T02:17:52Z
+  http://github.com,1,209,211,211,211,0.0000,1.0000,0.0000,0.0000,0.0000,0,2025-10-01T02:17:52Z
+  https://httpbin.org/status/404,1,436,797,927,927,0.0000,0.0000,1.0000,0.0000,0.0000,0,2025-10-01T02:17:52Z
+  http://localhost:3001,1,0,0,0,0,0.0000,0.0000,0.0000,0.0000,1.0000,0,2025-10-01T02:17:52Z
+  ```
+
+- **out/alertas_resumen.csv**
+  ```
+  timestamp,target,p90_ms,http_codigo,alerta_p90_excede
+  2025-10-01T02:17:52Z,https://github.com,2103,200,SI
+  2025-10-01T02:17:52Z,http://github.com,211,301,NO
+  2025-10-01T02:17:52Z,https://httpbin.org/status/404,927,404,NO
+  2025-10-01T02:17:52Z,http://localhost:3001,0,000,NO
+  ```
+
+### Ejecución y validaciones
+
+**1. Generar artefactos**
+```bash
+BUDGET_MS=950 make parse
+[parser] generado: out/resumen_por_target.csv y out/alertas_resumen.csv
+[parse] listo: out/resumen_por_target.csv ; out/alertas_resumen.csv
+```
+
+**2. Validar cabeceras (contrato de salida)**
+```bash
+head -1 out/resumen_por_target.csv | grep -qx 'target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts' && echo "OK resumen"
+# Resultado: OK resumen
+
+head -1 out/alertas_resumen.csv | grep -qx 'timestamp,target,p90_ms,http_codigo,alerta_p90_excede' && echo "OK alertas"
+# Resultado: OK alertas
+```
+
+**3. Verificar alertas activas**
+```bash
+grep ',SI$' out/alertas_resumen.csv || echo "Sin alertas por p90"
+# Resultado: 2025-10-01T02:17:52Z,https://github.com,2103,200,SI
+```
+
+**4. Idempotencia con Make**
+```bash
+time make parse
+# real    0m0.059s
+time make parse
+# real    0m0.031s
+time make parse
+# real    0m0.026s
+```
+> La segunda y tercera ejecución fueron inmediatas porque los archivos de salida ya estaban actualizados. Esto demuestra **caché incremental e idempotencia**.
+
+---
+
+### Pruebas Bats
+
+Archivo: `tests/test_parser_resumen.bats`
+
+Ejecutando:
+```bash
+make test
+```
+
+Resultados:
+```
+test_monitor.bats
+ ✓ monitor genera out/latencias.csv con fila válida
+test_parser_resumen.bats
+ ✓ Parser: genera resumen y alertas con cabeceras correctas
+ ✓ Parser: idempotencia (no recalcula si no cambian entradas)
+ ✓ Parser: falla con cabecera inválida (código 5)
+
+4 tests, 0 failures
+```
+
