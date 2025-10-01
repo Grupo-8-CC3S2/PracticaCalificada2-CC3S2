@@ -3,7 +3,7 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 .DELETE_ON_ERROR:
 
-.PHONY: tools build test run package clean help deps
+.PHONY: tools build test run package clean help deps parse metrics verify-contratos
 
 SHELLCHECK :=shellcheck
 SHFMT :=shfmt
@@ -19,7 +19,7 @@ $(OUT_DIR)/monitor.log: $(SRC_DIR)/monitor.sh
 	$(SHELL) $< > $@
 
 test: ## ejecuta pruebas bats
-	bats $(TEST_DIR)
+	@bats tests/*.bats
 
 package: $(DIST_DIR)/monitor.tar.gz ## Empaqueta artefactos determinísticamente
 
@@ -48,3 +48,18 @@ help: ## visualizacion de descripcion de targets
 
 run: ## ejecuta monitor y genera CSV
 	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/monitor.sh
+
+## Calcula métricas agregadas (resumen) y alertas desde out/latencias.csv
+parse: $(OUT_DIR)/resumen_por_target.csv $(OUT_DIR)/alertas_resumen.csv
+	@echo "[parse] listo: $(OUT_DIR)/resumen_por_target.csv ; $(OUT_DIR)/alertas_resumen.csv"
+
+$(OUT_DIR)/resumen_por_target.csv $(OUT_DIR)/alertas_resumen.csv: $(OUT_DIR)/latencias.csv src/parser_resumen.sh
+	@./src/parser_resumen.sh $(OUT_DIR)/latencias.csv
+
+## Alias de métricas
+metrics: parse
+
+verify-contratos: ## Verifica cabeceras de artefactos
+	@head -1 out/resumen_por_target.csv | grep -qx 'target,muestras,p50_avg_ms,p75_avg_ms,p90_avg_ms,p90_max_ms,rate_2xx,rate_3xx,rate_4xx,rate_5xx,rate_000,alertas_p90_excedidas,ult_ts'
+	@head -1 out/alertas_resumen.csv | grep -qx 'timestamp,target,p90_ms,http_codigo,alerta_p90_excede'
+	@echo "[verify] contratos OK"
