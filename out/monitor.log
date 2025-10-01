@@ -1,3 +1,6 @@
-endpoint : http://facebook.com/login
-http_code : 301
-time_total : 0.089967
+latencias.csv actualizado: (2025-10-01T02:15:14Z,https://github.com,882,885,889,200)
+latencias.csv actualizado: (2025-10-01T02:15:14Z,http://github.com,209,209,213,301)
+latencias.csv actualizado: (2025-10-01T02:15:14Z,https://httpbin.org/status/404,440,464,952,404)
+ALERTA: Error http 404 en https://httpbin.org/status/404
+ALERTA: el percentil p90 (952 ms) excede el presupuesto de 950 ms para https://httpbin.org/status/404
+latencias.csv actualizado: (2025-10-01T02:15:14Z,http://localhost:3001,0,0,0,000)

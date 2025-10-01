@@ -1,6 +1,5 @@
-timestamp,target,http_codigo,tiempo_ms
-2025-09-28T22:42:43Z,https://github.com,200,897
-2025-09-28T22:42:43Z,http://localhost:3001,200,2
-2025-09-28T22:44:35Z,https://endpoint-no-existe.com,0,0
-2025-09-28T22:44:35Z,http://localhost:3002,0,0
-2025-09-28T22:44:35Z,http://github.com,301,356
+timestamp,target,p50,p75,p90,http_codigo
+2025-10-01T02:17:52Z,https://github.com,892,1268,2103,200
+2025-10-01T02:17:52Z,http://github.com,209,211,211,301
+2025-10-01T02:17:52Z,https://httpbin.org/status/404,436,797,927,404
+2025-10-01T02:17:52Z,http://localhost:3001,0,0,0,000
