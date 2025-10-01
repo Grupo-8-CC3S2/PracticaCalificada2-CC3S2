@@ -20,14 +20,15 @@ timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # checkeo para cada endpoint
 for objetivo in $TARGETS; do
-  if salida=$(curl -sS -o /dev/null -w "%{http_code} %{time_total}" "$objetivo"); then
+  if salida=$(curl ${CURL_OPTS:-} -sS -o /dev/null -w "%{http_code} %{time_total}" "$objetivo"); then
     http_codigo=$(echo "$salida" | awk '{print $1}')
     tiempo_ms=$(echo "$salida" | awk '{printf("%d", $2*1000)}')
-    exit_code=0
+    if [[ "$http_codigo" -ne 200 ]]; then
+      fallo=1
+    fi
   else
     http_codigo=0
-    tiempo_ms=0
-    exit_code=1 
+    tiempo_ms=0  
     fallo=1
   fi
   # registrar en CSV
