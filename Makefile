@@ -11,12 +11,19 @@ SRC_DIR :=src
 TEST_DIR :=tests
 OUT_DIR :=out
 DIST_DIR :=dist
-all: tools lint build test package
+TARGETS :=example.com
+all: tools lint build test package run
 
 build: $(OUT_DIR)/monitor.log ## build dummy (evidencia)
-$(OUT_DIR)/monitor.log: $(SRC_DIR)/monitor.sh
+$(OUT_DIR)/monitor.log: $(SRC_DIR)/check-endpoint.sh
 	mkdir -p $(@D)
-	$(SHELL) $< > $@
+	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $<  > $@ 
+
+run:$(OUT_DIR)/latencias.csv #### ejecuta monitor y genera CSV
+
+$(OUT_DIR)/latencias.csv: $(SRC_DIR)/check-endpoint.sh
+	mkdir -p $(@D)
+	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $<
 
 test: ## ejecuta pruebas bats
 	bats $(TEST_DIR)
@@ -47,4 +54,4 @@ help: ## visualizacion de descripcion de targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | awk -F ':|##' '{printf " %s %s\n" ,$$1,$$3}'
 
 run: ## ejecuta monitor y genera CSV
-	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/monitor.sh
+	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $(SRC_DIR)/check-endpoint.sh
