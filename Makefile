@@ -30,7 +30,7 @@ $(OUT_DIR)/latencias.csv: $(SRC_DIR)/check-endpoint.sh
 	@TARGETS=$${TARGETS:-https://example.com} $(SHELL) $<
 
 test: ## ejecuta pruebas bats
-	bats $(TEST_DIR)/test_monitor.bats
+	bats $(TEST_DIR)/*.bats
 
 package: $(DIST_DIR)/monitor.tar.gz ## Empaqueta artefactos determinísticamente
 

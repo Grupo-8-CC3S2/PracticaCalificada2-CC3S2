@@ -11,7 +11,7 @@ setup() {
   # Intenta pipeline estándar (Makefile); si no existe, llama script directo
   run bash -lc 'make run'
   if [ "$status" -ne 0 ]; then
-    run bash -lc './src/monitor.sh'
+    run bash -lc './src/check-endpoint.sh'
   fi
 
   # Debe existir CSV
