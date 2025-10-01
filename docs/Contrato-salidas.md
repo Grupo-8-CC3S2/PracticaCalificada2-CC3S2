@@ -41,33 +41,35 @@ OK: formato válido
 Comandos usados:
 
 ```sh
-TARGETS="https://github.com http://localhost:3001" ./src/check-endpoint.sh
-TARGETS="https://endpoint-no-existe.com http://localhost:3002 http://github.com" ./src/check-endpoint.sh
+TARGETS="https://github.com http://github.com https://httpbin.org/status/404 http://localhost:3001" BUDGET_MS=950 ./src/check-endpoint.sh
 ```
 
 Información guardada en `out/latencias.csv` :
 
 ```
-timestamp,target,http_codigo,tiempo_ms
-2025-09-28T22:42:43Z,https://github.com,200,897
-2025-09-28T22:42:43Z,http://localhost:3001,200,2
-2025-09-28T22:44:35Z,https://endpoint-no-existe.com,0,0
-2025-09-28T22:44:35Z,http://localhost:3002,0,0
-2025-09-28T22:44:35Z,http://github.com,301,356
+timestamp,target,p50,p75,p90,http_codigo
+2025-10-01T02:17:52Z,https://github.com,892,1268,2103,200
+2025-10-01T02:17:52Z,http://github.com,209,211,211,301
+2025-10-01T02:17:52Z,https://httpbin.org/status/404,436,797,927,404
+2025-10-01T02:17:52Z,http://localhost:3001,0,0,0,000
 ```
 Tenemos que:
 
-- `https://github.com` OK (200, 897 ms)
-- `http://localhost:3001` OK (200, 2 ms). Exit code = 0. (Se creo un servidor http basico con `python3 -m http.server 3001` para estas pruebas)
-- `https://endpoint-no-existe.com` falló (0 — probable DNS/host no existente)
-- `http://localhost:3002` falló (0 — servicio no escuchando)
-- `http://github.com` respondió 301 (redirección a HTTPS) en 356 ms. Exit code = 1 por los fallos de conexión.
+- Umbral de latencia: `BUDGET_MS=950`(950 ms)
+- `https://github.com`: 200 OK, con latencias percentil p50=892 ms, p75=1268 ms y p90=2103 ms. Servicio accesible a través de internet, tiempos relativamente altos pero aceptables considerando el tráfico hacia GitHub.
+- `http://github.com`: 301 Redirección a HTTPS, con latencias bajas (209–211 ms). El servicio solo funciona en HTTPS, por eso devuelve redirección cuando se accede por HTTP.
+- `https://httpbin.org/status/404`: 404 Not Found, con latencias entre 436 ms y 927 ms. El host responde correctamente, pero el endpoint solicitado no existe(se uso un endpoint de pruebas)
+- `http://localhost:3001`: falló (0 — servicio no escuchando).
 
 
-### Ejemplo de salida para endpoints con errores: 
+### Ejemplo de salida(logs) 
 
 ```
-jquispe@pc1-quispe:~/Escritorio/cursos/Actividades/PracticaCalificada2-CC3S2$ TARGETS="http://localhost:5001 https://endpoint-no-existe.com" ./src/check-endpoint.sh
-curl: (7) Failed to connect to localhost port 5001 after 0 ms: Could not connect to server
-curl: (6) Could not resolve host: endpoint-no-existe.com
+jquispe@pc1-quispe:~/Escritorio/cursos/Actividades/PracticaCalificada2-CC3S2$ TARGETS="https://github.com http://github.com https://httpbin.org/status/404 http://localhost:3001" BUDGET_MS=950 ./src/check-endpoint.sh
+latencias.csv actualizado: (2025-10-01T02:15:14Z,https://github.com,882,885,889,200)
+latencias.csv actualizado: (2025-10-01T02:15:14Z,http://github.com,209,209,213,301)
+latencias.csv actualizado: (2025-10-01T02:15:14Z,https://httpbin.org/status/404,440,464,952,404)
+ALERTA: Error http 404 en https://httpbin.org/status/404
+ALERTA: el percentil p90 (952 ms) excede el presupuesto de 950 ms para https://httpbin.org/status/404
+latencias.csv actualizado: (2025-10-01T02:15:14Z,http://localhost:3001,0,0,0,000)
 ```
